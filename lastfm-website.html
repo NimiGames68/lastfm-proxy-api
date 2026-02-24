@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Now Playing</title>
+
+  <style>
+    body {
+      background: #0f0f0f;
+      color: #fff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    #music-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #1a1a1a;
+      padding: 12px 16px;
+      border-radius: 14px;
+      width: fit-content;
+    }
+
+    #music-box img {
+      width: 64px;
+      height: 64px;
+      border-radius: 10px;
+    }
+
+    a {
+      color: #fff;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .artist {
+      font-size: 13px;
+      opacity: 0.85;
+    }
+
+    .album {
+      font-size: 12px;
+      opacity: 0.6;
+    }
+
+    .status {
+      font-size: 11px;
+      opacity: 0.6;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="music-box">A carregar música…</div>
+
+<script>
+const ENDPOINT = "https://nimigames-lastfm-proxy-api.vercel.app/api/lastfm";
+
+async function loadMusic() {
+  try {
+    const res = await fetch(ENDPOINT);
+    const data = await res.json();
+
+    const track = data?.recenttracks?.track?.[0];
+    if (!track) {
+      document.getElementById("music-box").innerText = "Sem música 😭";
+      return;
+    }
+
+    const title = track.name;
+    const artist = track.artist["#text"];
+    const album = track.album?.["#text"];
+
+    const trackUrl = track.url;
+    const artistUrl = `https://www.last.fm/music/${encodeURIComponent(artist)}`;
+    const albumUrl = album
+      ? `https://www.last.fm/music/${encodeURIComponent(artist)}/${encodeURIComponent(album)}`
+      : null;
+
+    const cover = track.image?.[3]?.["#text"];
+    const nowPlaying = track["@attr"]?.nowplaying === "true";
+
+    document.getElementById("music-box").innerHTML = `
+      ${cover ? `<img src="${cover}" alt="Capa do álbum">` : ""}
+      <div>
+        <div class="title">
+          <a href="${trackUrl}" target="_blank" rel="noopener noreferrer">
+            ${title}
+          </a>
+        </div>
+
+        <div class="artist">
+          <a href="${artistUrl}" target="_blank" rel="noopener noreferrer">
+            ${artist}
+          </a>
+        </div>
+
+        ${album ? `
+          <div class="album">
+            <a href="${albumUrl}" target="_blank" rel="noopener noreferrer">
+              ${album}
+            </a>
+          </div>
+        ` : ""}
+
+        <div class="status">
+          ${nowPlaying ? "🎧 A ouvir agora" : "🕒 Última música"}
+        </div>
+      </div>
+    `;
+  } catch (err) {
+    console.error(err);
+    document.getElementById("music-box").innerText = "Erro a carregar música 💀";
+  }
+}
+
+loadMusic();
+setInterval(loadMusic, 60000);
+</script>
+
+</body>
+</html>
