@@ -1,12 +1,21 @@
 export default async function handler(req, res) {
+
+  //CORS HEADERS PRIMEIRO DE TUDO
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  //IMPORTANTE: lidar com preflight
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   try {
     const username = process.env.LASTFM_USERNAME;
     const apiKey = process.env.LASTFM_API_KEY;
 
     if (!username || !apiKey) {
-      return res.status(500).json({
-        error: "Missing environment variables"
-      });
+      return res.status(500).json({ error: "Missing env variables" });
     }
 
     const response = await fetch(
@@ -18,10 +27,6 @@ export default async function handler(req, res) {
     return res.status(200).json(data);
 
   } catch (err) {
-    console.error("SERVER ERROR:", err);
-    return res.status(500).json({
-      error: "Server crashed",
-      details: err.message
-    });
+    return res.status(500).json({ error: err.message });
   }
 }
