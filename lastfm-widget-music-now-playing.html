@@ -24,6 +24,12 @@ body {
   box-shadow: 0 0 25px rgba(0,0,0,0.4);
 }
 
+.status {
+  font-size: 12px;
+  margin-bottom: 8px;
+  opacity: 0.7;
+}
+
 .music-content {
   display: flex;
   gap: 14px;
@@ -47,7 +53,6 @@ body {
   width: 100%;
   font-size: 14px;
   margin-bottom: 4px;
-  position: relative;
 }
 
 .text-container a {
@@ -91,21 +96,26 @@ async function loadMusic() {
     const artistUrl = `https://www.last.fm/music/${encodeURIComponent(artist)}`;
     const albumUrl = `https://www.last.fm/music/${encodeURIComponent(artist)}/${encodeURIComponent(album)}`;
 
+    const isNowPlaying = track["@attr"]?.nowplaying === "true";
+    const statusText = isNowPlaying ? "A ouvir agora" : "Última música ouvida";
+
     document.getElementById("music-box").innerHTML = `
+      <div class="status">${statusText}</div>
+
       <div class="music-content">
         ${cover ? `<img src="${cover}" class="cover">` : ""}
         <div class="text-block">
 
           <div class="text-container">
-            <a href="${trackUrl}" target="_blank" class="track">${title}</a>
+            <a href="${trackUrl}" target="_blank">${title}</a>
           </div>
 
           <div class="text-container">
-            <a href="${artistUrl}" target="_blank" class="artist">${artist}</a>
+            <a href="${artistUrl}" target="_blank">${artist}</a>
           </div>
 
           <div class="text-container">
-            <a href="${albumUrl}" target="_blank" class="album">${album}</a>
+            <a href="${albumUrl}" target="_blank">${album}</a>
           </div>
 
         </div>
@@ -116,14 +126,12 @@ async function loadMusic() {
 
   } catch (err) {
     document.getElementById("music-box").innerText = "Erro a carregar música 💀";
-    console.error(err);
   }
 }
 
 function enableScrollIfNeeded() {
   document.querySelectorAll(".text-container a").forEach(el => {
     const container = el.parentElement;
-
     if (el.scrollWidth > container.clientWidth) {
       el.classList.add("scrolling");
     }
