@@ -1,127 +1,133 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-  <meta charset="UTF-8">
-  <title>Now Playing</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Now Playing</title>
 
-  <style>
-    body {
-      background: #0f0f0f;
-      color: #fff;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    }
+<style>
+body {
+  background: #0f0f0f;
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  color: white;
+}
 
-    #music-box {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: #1a1a1a;
-      padding: 12px 16px;
-      border-radius: 14px;
-      width: fit-content;
-    }
+#music-box {
+  width: 320px;
+  background: #1a1a1a;
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 0 25px rgba(0,0,0,0.4);
+}
 
-    #music-box img {
-      width: 64px;
-      height: 64px;
-      border-radius: 10px;
-    }
+.music-content {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
 
-    a {
-      color: #fff;
-      text-decoration: none;
-    }
+.cover {
+  width: 70px;
+  height: 70px;
+  border-radius: 12px;
+  object-fit: cover;
+}
 
-    a:hover {
-      text-decoration: underline;
-    }
+.text-block {
+  flex: 1;
+}
 
-    .title {
-      font-weight: 600;
-      font-size: 14px;
-    }
+.text-container {
+  overflow: hidden;
+  white-space: nowrap;
+  width: 100%;
+  font-size: 14px;
+  margin-bottom: 4px;
+  position: relative;
+}
 
-    .artist {
-      font-size: 13px;
-      opacity: 0.85;
-    }
+.text-container a {
+  color: white;
+  text-decoration: none;
+  display: inline-block;
+}
 
-    .album {
-      font-size: 12px;
-      opacity: 0.6;
-    }
+.text-container a:hover {
+  text-decoration: underline;
+}
 
-    .status {
-      font-size: 11px;
-      opacity: 0.6;
-      margin-top: 2px;
-    }
-  </style>
+.scrolling {
+  animation: scrollLeft 10s linear infinite;
+}
+
+@keyframes scrollLeft {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+</style>
 </head>
 
 <body>
 
-<div id="music-box">A carregar música…</div>
+<div id="music-box">A carregar música...</div>
 
 <script>
-const ENDPOINT = "https://nimigames-lastfm-proxy-api.vercel.app/api/lastfm";
-
 async function loadMusic() {
   try {
-    const res = await fetch(ENDPOINT);
+    const res = await fetch("https://nimigames-lastfm-proxy-api.vercel.app/api/lastfm");
     const data = await res.json();
-
-    const track = data?.recenttracks?.track?.[0];
-    if (!track) {
-      document.getElementById("music-box").innerText = "Sem música 😭";
-      return;
-    }
+    const track = data.recenttracks.track[0];
 
     const title = track.name;
     const artist = track.artist["#text"];
-    const album = track.album?.["#text"];
+    const album = track.album["#text"];
+    const cover = track.image?.[3]?.["#text"];
 
     const trackUrl = track.url;
     const artistUrl = `https://www.last.fm/music/${encodeURIComponent(artist)}`;
-    const albumUrl = album
-      ? `https://www.last.fm/music/${encodeURIComponent(artist)}/${encodeURIComponent(album)}`
-      : null;
-
-    const cover = track.image?.[3]?.["#text"];
-    const nowPlaying = track["@attr"]?.nowplaying === "true";
+    const albumUrl = `https://www.last.fm/music/${encodeURIComponent(artist)}/${encodeURIComponent(album)}`;
 
     document.getElementById("music-box").innerHTML = `
-      ${cover ? `<img src="${cover}" alt="Capa do álbum">` : ""}
-      <div>
-        <div class="title">
-          <a href="${trackUrl}" target="_blank" rel="noopener noreferrer">
-            ${title}
-          </a>
-        </div>
+      <div class="music-content">
+        ${cover ? `<img src="${cover}" class="cover">` : ""}
+        <div class="text-block">
 
-        <div class="artist">
-          <a href="${artistUrl}" target="_blank" rel="noopener noreferrer">
-            ${artist}
-          </a>
-        </div>
-
-        ${album ? `
-          <div class="album">
-            <a href="${albumUrl}" target="_blank" rel="noopener noreferrer">
-              ${album}
-            </a>
+          <div class="text-container">
+            <a href="${trackUrl}" target="_blank" class="track">${title}</a>
           </div>
-        ` : ""}
 
-        <div class="status">
-          ${nowPlaying ? "🎧 A ouvir agora" : "🕒 Última música"}
+          <div class="text-container">
+            <a href="${artistUrl}" target="_blank" class="artist">${artist}</a>
+          </div>
+
+          <div class="text-container">
+            <a href="${albumUrl}" target="_blank" class="album">${album}</a>
+          </div>
+
         </div>
       </div>
     `;
+
+    enableScrollIfNeeded();
+
   } catch (err) {
-    console.error(err);
     document.getElementById("music-box").innerText = "Erro a carregar música 💀";
+    console.error(err);
   }
+}
+
+function enableScrollIfNeeded() {
+  document.querySelectorAll(".text-container a").forEach(el => {
+    const container = el.parentElement;
+
+    if (el.scrollWidth > container.clientWidth) {
+      el.classList.add("scrolling");
+    }
+  });
 }
 
 loadMusic();
