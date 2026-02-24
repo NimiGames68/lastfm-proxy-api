@@ -22,6 +22,7 @@ body {
   padding: 16px;
   border-radius: 16px;
   box-shadow: 0 0 25px rgba(0,0,0,0.4);
+  position: relative;
 }
 
 .status {
@@ -55,9 +56,9 @@ body {
 }
 
 .text-container a {
+  display: inline-block;
   color: white;
   text-decoration: none;
-  display: inline-block;
 }
 
 .text-container a:hover {
@@ -70,7 +71,7 @@ body {
   font-weight: 600;
 }
 
-/* 🎤 Artista normal */
+/* 🎤 Artista */
 .artist-name {
   font-size: 14px;
 }
@@ -89,6 +90,26 @@ body {
 @keyframes scrollLeft {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-100%); }
+}
+
+/* 🔎 Botão Letras */
+.lyrics-btn {
+  position: absolute;
+  bottom: 10px;
+  right: 12px;
+  font-size: 12px;
+  background: #2a2a2a;
+  padding: 6px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: white;
+  opacity: 0.8;
+  transition: 0.2s;
+}
+
+.lyrics-btn:hover {
+  opacity: 1;
+  background: #3a3a3a;
 }
 </style>
 </head>
@@ -114,7 +135,10 @@ async function loadMusic() {
     const albumUrl = `https://www.last.fm/music/${encodeURIComponent(artist)}/${encodeURIComponent(album)}`;
 
     const isNowPlaying = track["@attr"]?.nowplaying === "true";
-    const statusText = isNowPlaying ? "🟢 A ouvir agora" : "⚪ Última música ouvida";
+    const statusText = isNowPlaying ? "A ouvir agora🎧" : "Última música ouvida🎵";
+
+    const googleLyricsUrl =
+      `https://www.google.com/search?q=${encodeURIComponent(title + " " + artist + " letras")}`;
 
     document.getElementById("music-box").innerHTML = `
       <div class="status">${statusText}</div>
@@ -137,6 +161,10 @@ async function loadMusic() {
 
         </div>
       </div>
+
+      <a href="${googleLyricsUrl}" target="_blank" class="lyrics-btn">
+        Letras
+      </a>
     `;
 
     enableScrollIfNeeded();
