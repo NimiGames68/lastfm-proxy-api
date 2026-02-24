@@ -1,28 +1,27 @@
-<script>
-async function loadMusic() {
+export default async function handler(req, res) {
   try {
-    const res = await fetch("https://nimigames-lastfm-proxy-api.vercel.app/api/lastfm");
-    const text = await res.text();
+    const username = process.env.LASTFM_USERNAME;
+    const apiKey = process.env.LASTFM_API_KEY;
 
-    console.log("Resposta crua:", text);
-
-    const data = JSON.parse(text);
-
-    const track = data?.recenttracks?.track?.[0];
-
-    if (!track) {
-      document.getElementById("music-box").innerText = "Sem música encontrada 😭";
-      return;
+    if (!username || !apiKey) {
+      return res.status(500).json({
+        error: "Missing environment variables"
+      });
     }
 
-    document.getElementById("music-box").innerText =
-      track.name + " - " + track.artist["#text"];
+    const response = await fetch(
+      `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&api_key=${apiKey}&format=json&limit=1`
+    );
+
+    const data = await response.json();
+
+    return res.status(200).json(data);
 
   } catch (err) {
-    document.getElementById("music-box").innerText = "Erro a carregar música 💀";
-    console.error("ERRO REAL:", err);
+    console.error("SERVER ERROR:", err);
+    return res.status(500).json({
+      error: "Server crashed",
+      details: err.message
+    });
   }
 }
-
-loadMusic();
-</script>
