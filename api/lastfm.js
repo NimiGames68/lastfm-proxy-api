@@ -1,12 +1,28 @@
-export default async function handler(req, res) {
-  const username = process.env.LASTFM_USERNAME;
-  const apiKey = process.env.LASTFM_API_KEY;
+<script>
+async function loadMusic() {
+  try {
+    const res = await fetch("https://nimigames-lastfm-proxy-api.vercel.app/api/lastfm");
+    const text = await res.text();
 
-  const response = await fetch(
-    `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&api_key=${apiKey}&format=json&limit=1`
-  );
+    console.log("Resposta crua:", text);
 
-  const data = await response.json();
+    const data = JSON.parse(text);
 
-  res.status(200).json(data);
+    const track = data?.recenttracks?.track?.[0];
+
+    if (!track) {
+      document.getElementById("music-box").innerText = "Sem música encontrada 😭";
+      return;
+    }
+
+    document.getElementById("music-box").innerText =
+      track.name + " - " + track.artist["#text"];
+
+  } catch (err) {
+    document.getElementById("music-box").innerText = "Erro a carregar música 💀";
+    console.error("ERRO REAL:", err);
+  }
 }
+
+loadMusic();
+</script>
