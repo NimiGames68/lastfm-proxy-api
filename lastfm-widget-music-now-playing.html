@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nimi_Games68 Last.fm Scrobbling</title>
+<title>Last.fm Widget</title>
 
 <style>
 body {
@@ -17,46 +17,47 @@ body {
 }
 
 #music-box {
-  width: 320px;
+  width: 520px;
   background: #1a1a1a;
-  padding: 16px;
-  border-radius: 16px;
-  box-shadow: 0 0 25px rgba(0,0,0,0.4);
+  padding: 24px;
+  border-radius: 20px;
+  box-shadow: 0 0 30px rgba(0,0,0,0.5);
   position: relative;
 }
 
 .status {
-  font-size: 12px;
-  margin-bottom: 8px;
+  font-size: 13px;
   opacity: 0.7;
+  margin-bottom: 14px;
 }
 
 .music-content {
   display: flex;
-  gap: 14px;
+  gap: 20px;
   align-items: center;
 }
 
 .cover {
-  width: 70px;
-  height: 70px;
-  border-radius: 12px;
+  width: 90px;
+  height: 90px;
+  border-radius: 16px;
   object-fit: cover;
 }
 
 .text-block {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .text-container {
-  overflow: hidden;
   white-space: nowrap;
-  width: 100%;
-  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .text-container a {
-  display: inline-block;
   color: white;
   text-decoration: none;
 }
@@ -65,50 +66,35 @@ body {
   text-decoration: underline;
 }
 
-/* 🎵 Música maior */
-.track-title {
+.track {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.artist {
   font-size: 16px;
-  font-weight: 600;
 }
 
-/* 🎤 Artista */
-.artist-name {
+.album {
   font-size: 14px;
+  opacity: 0.6;
 }
 
-/* 💿 Álbum mais escuro */
-.album-name {
-  font-size: 13px;
-  color: rgba(255,255,255,0.5);
-}
-
-/* Scroll automático */
-.scrolling {
-  animation: scrollLeft 10s linear infinite;
-}
-
-@keyframes scrollLeft {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-100%); }
-}
-
-/* 🔎 Botão Letras */
 .lyrics-btn {
   position: absolute;
-  bottom: 10px;
-  right: 12px;
-  font-size: 12px;
+  bottom: 20px;
+  right: 20px;
   background: #2a2a2a;
-  padding: 6px 10px;
-  border-radius: 8px;
-  text-decoration: none;
+  border: none;
   color: white;
-  opacity: 0.8;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  cursor: pointer;
   transition: 0.2s;
 }
 
 .lyrics-btn:hover {
-  opacity: 1;
   background: #3a3a3a;
 }
 </style>
@@ -116,7 +102,7 @@ body {
 
 <body>
 
-<div id="music-box">A carregar música...</div>
+<div id="music-box">Loading...</div>
 
 <script>
 async function loadMusic() {
@@ -129,62 +115,70 @@ async function loadMusic() {
     const artist = track.artist["#text"];
     const album = track.album["#text"];
     const cover = track.image?.[3]?.["#text"];
-
     const trackUrl = track.url;
+
     const artistUrl = `https://www.last.fm/music/${encodeURIComponent(artist)}`;
     const albumUrl = `https://www.last.fm/music/${encodeURIComponent(artist)}/${encodeURIComponent(album)}`;
 
     const isNowPlaying = track["@attr"]?.nowplaying === "true";
-    const statusText = isNowPlaying ? "A ouvir agora🎧" : "Última música ouvida🎵";
 
-    const googleLyricsUrl =
-      `https://www.google.com/search?q=${encodeURIComponent(title + " " + artist + " letras")}`;
+    let statusText;
+
+    if (isNowPlaying) {
+      statusText = "A ouvir agora";
+    } else {
+      const unixTimestamp = track.date?.uts;
+
+      if (unixTimestamp) {
+        const date = new Date(unixTimestamp * 1000);
+
+        const formattedDate = date.toLocaleDateString("pt-PT");
+        const formattedTime = date.toLocaleTimeString("pt-PT", {
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+
+        statusText = `Última música ouvida • ${formattedDate} às ${formattedTime}`;
+      } else {
+        statusText = "Last listened to";
+      }
+    }
+
+    const googleLyrics = `https://www.google.com/search?q=${encodeURIComponent(title + " " + artist + " letras")}`;
 
     document.getElementById("music-box").innerHTML = `
       <div class="status">${statusText}</div>
-
       <div class="music-content">
         ${cover ? `<img src="${cover}" class="cover">` : ""}
         <div class="text-block">
 
-          <div class="text-container track-title">
-            <a href="${trackUrl}" target="_blank">${title}</a>
+          <div class="text-container">
+            <a href="${trackUrl}" target="_blank" class="track">${title}</a>
           </div>
 
-          <div class="text-container artist-name">
-            <a href="${artistUrl}" target="_blank">${artist}</a>
+          <div class="text-container">
+            <a href="${artistUrl}" target="_blank" class="artist">${artist}</a>
           </div>
 
-          <div class="text-container album-name">
-            <a href="${albumUrl}" target="_blank">${album}</a>
+          <div class="text-container">
+            <a href="${albumUrl}" target="_blank" class="album">${album}</a>
           </div>
 
         </div>
       </div>
 
-      <a href="${googleLyricsUrl}" target="_blank" class="lyrics-btn">
-        Letras
-      </a>
+      <button class="lyrics-btn" onclick="window.open('${googleLyrics}', '_blank')">
+        Lyrics
+      </button>
     `;
 
-    enableScrollIfNeeded();
-
   } catch (err) {
-    document.getElementById("music-box").innerText = "Erro a carregar música...";
+    document.getElementById("music-box").innerText = "Error Loading...";
   }
 }
 
-function enableScrollIfNeeded() {
-  document.querySelectorAll(".text-container a").forEach(el => {
-    const container = el.parentElement;
-    if (el.scrollWidth > container.clientWidth) {
-      el.classList.add("scrolling");
-    }
-  });
-}
-
 loadMusic();
-setInterval(loadMusic, 60000);
+setInterval(loadMusic, 45000);
 </script>
 
 </body>
